@@ -73,7 +73,7 @@ cmitool/
 4. Deploy.
 
 ### License
-[Apache License 2.0](LICENSE)
+[MIT](LICENSE)
 
 ---
 
@@ -144,6 +144,7 @@ cmitool/
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=cmijohnson/Ultra-Simple-LNMP-Architecture-Navigation-Hub&type=Date)](https://star-history.com/#cmijohnson/Ultra-Simple-LNMP-Architecture-Navigation-Hub&Date)
+
 
 
 
