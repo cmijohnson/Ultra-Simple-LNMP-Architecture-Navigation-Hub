@@ -37,10 +37,10 @@
 - ** Responsive**: Mobile-first design.
 
 ### 📸 Screenshots
-![PixPin_2026-01-08_00-48-59](.\photos\PixPin_2026-01-08_00-48-59.png)
-![PixPin_2026-01-08_00-48-45](.\photos\PixPin_2026-01-08_00-48-45.png)
-![PixPin_2026-01-08_00-48-38](.\photos\PixPin_2026-01-08_00-48-38.png)
-![PixPin_2026-01-08_00-48-23](.\photos\PixPin_2026-01-08_00-48-23.png)
+![PixPin_2026-01-08_00-48-59](photos\PixPin_2026-01-08_00-48-59.png)
+![PixPin_2026-01-08_00-48-45](photos\PixPin_2026-01-08_00-48-45.png)
+![PixPin_2026-01-08_00-48-38](photos\PixPin_2026-01-08_00-48-38.png)
+![PixPin_2026-01-08_00-48-23](photos\PixPin_2026-01-08_00-48-23.png)
 ### 📂 File Structure
 ```
 cmitool/
@@ -144,4 +144,5 @@ cmitool/
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=cmijohnson/Ultra-Simple-LNMP-Architecture-Navigation-Hub&type=Date)](https://star-history.com/#cmijohnson/Ultra-Simple-LNMP-Architecture-Navigation-Hub&Date)
+
 
