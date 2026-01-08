@@ -46,6 +46,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $msg = "模块已下线。";
     }
 
+    if ($_POST['action'] === 'delete_user') {
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role != 'admin'");
+        $stmt->execute([$_POST['id']]);
+        $msg = "用户已删除。";
+    }
+
+    if ($_POST['action'] === 'delete_message') {
+        $stmt = $pdo->prepare("DELETE FROM messages WHERE id = ?");
+        $stmt->execute([$_POST['id']]);
+        $msg = "留言已删除。";
+    }
+
     if ($_POST['action'] === 'gen_invite') {
         $code = strtoupper(substr(md5(uniqid()), 0, 8));
         $stmt = $pdo->prepare("INSERT INTO invitations (code, created_by) VALUES (?, ?)");
@@ -69,7 +81,8 @@ $msgCount = $pdo->query("SELECT COUNT(*) FROM messages")->fetchColumn();
 // Fetch Data
 $tools = $pdo->query("SELECT * FROM tools ORDER BY sort_order ASC, id DESC")->fetchAll();
 $changelogs = $pdo->query("SELECT * FROM changelogs ORDER BY date DESC, version DESC")->fetchAll();
-$messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fetchAll();
+$messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 20")->fetchAll();
+$users = $pdo->query("SELECT * FROM users ORDER BY id DESC LIMIT 50")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,7 +114,8 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fet
             <a href="#" class="sidebar-link active flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em]"><i data-lucide="layout-grid" size="18"></i> 控制台</a>
             <a href="#tools" class="sidebar-link flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-white"><i data-lucide="box" size="18"></i> 导航管理</a>
             <a href="#logs" class="sidebar-link flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-white"><i data-lucide="history" size="18"></i> 更新日志</a>
-            <a href="#users" class="sidebar-link flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-white"><i data-lucide="users" size="18"></i> 会员管理</a>
+            <a href="#users-section" class="sidebar-link flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-white"><i data-lucide="users" size="18"></i> 会员管理</a>
+            <a href="#messages-section" class="sidebar-link flex items-center gap-4 py-4 px-6 rounded-xl transition-all font-bold text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-white"><i data-lucide="message-square" size="18"></i> 留言板</a>
         </nav>
 
         <div class="pt-8 border-t border-white/5">
@@ -192,11 +206,21 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fet
                     <div id="tool-modal" class="hidden glass p-10 rounded-[3rem] space-y-8 animate-fade-in-up">
                          <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <input type="hidden" name="action" value="add_tool">
-                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">中文标题</label><input type="text" name="name_zh" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm font-bold"></div>
-                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">英文标题</label><input type="text" name="name_en" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm font-bold"></div>
-                             <div class="md:col-span-2 space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">链接 (外部链接或组件留空)</label><input type="text" name="url" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 font-mono text-xs"></div>
-                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">图标 (Lucide Icon)</label><select name="icon" class="w-full bg-black border border-white/10 rounded-2xl px-6 py-4 outline-none"><option value="zap">Zap</option><option value="bot">Bot</option><option value="code">Code</option><option value="globe">Globe</option></select></div>
-                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">分类</label><select name="category" class="w-full bg-black border border-white/10 rounded-2xl px-6 py-4 outline-none"><option value="Recommend">Featured (推荐)</option><option value="Tool">Utility (工具)</option></select></div>
+                             <input type="hidden" name="slug" value="<?php echo 'app-'.time(); ?>">
+                             
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">中文标题 (ZH)</label><input type="text" name="name_zh" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm font-bold"></div>
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">英文标题 (EN)</label><input type="text" name="name_en" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm font-bold"></div>
+                             
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">简介 (ZH)</label><input type="text" name="desc_zh" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm"></div>
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">简介 (EN)</label><input type="text" name="desc_en" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 text-sm"></div>
+
+                             <div class="md:col-span-2 space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">链接 (URL)</label><input type="text" name="url" required class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 font-mono text-xs"></div>
+                             
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">图标 (Lucide Icon)</label><input type="text" name="icon" value="link" class="w-full bg-black border border-white/10 rounded-2xl px-6 py-4 outline-none font-mono text-xs"></div>
+                             <div class="space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">尺寸 (Size)</label><select name="size" class="w-full bg-black border border-white/10 rounded-2xl px-6 py-4 outline-none"><option value="small">Small (1x1)</option><option value="medium">Medium (2x1)</option><option value="large">Large (2x2)</option></select></div>
+                             
+                             <div class="md:col-span-2 space-y-3"><label class="text-[10px] font-black uppercase text-zinc-500 ml-4">分类</label><select name="category" class="w-full bg-black border border-white/10 rounded-2xl px-6 py-4 outline-none"><option value="Recommend">Featured (推荐)</option><option value="International">Global (国际)</option><option value="SmartUJS">Smart UJS (智慧江大)</option><option value="Tool">Utility (工具)</option><option value="Info">Info (信息)</option><option value="External">Social (社交)</option></select></div>
+                             
                              <button type="submit" class="md:col-span-2 py-5 rounded-2xl bg-blue-600 font-black uppercase tracking-widest text-xs">添加模块</button>
                          </form>
                     </div>
@@ -254,6 +278,35 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fet
                          <?php endforeach; ?>
                     </div>
                 </section>
+                
+                <!-- Users Section -->
+                <section id="users-section" class="space-y-8">
+                     <h2 class="text-3xl font-black uppercase italic tracking-tighter">会员管理</h2>
+                     <div class="glass rounded-[2.5rem] overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-white/5 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 border-b border-white/5">
+                                <tr><th class="p-8">用户</th><th class="p-8">角色</th><th class="p-8">创建时间</th><th class="p-8">操作</th></tr>
+                            </thead>
+                            <tbody class="text-xs font-bold divide-y divide-white/5">
+                                <?php foreach($users as $u): ?>
+                                    <tr class="hover:bg-white/5 transition-colors">
+                                        <td class="p-8 text-zinc-300"><?php echo htmlspecialchars($u['username']); ?></td>
+                                        <td class="p-8"><span class="px-2 py-1 rounded bg-white/10 text-[9px] uppercase"><?php echo $u['role']; ?></span></td>
+                                        <td class="p-8 text-zinc-500 text-[9px] font-mono"><?php echo $u['created_at']; ?></td>
+                                        <td class="p-8">
+                                            <?php if ($u['role'] !== 'admin'): ?>
+                                                <form method="POST" onsubmit="return confirm('删除用户?');">
+                                                    <input type="hidden" name="action" value="delete_user"><input type="hidden" name="id" value="<?php echo $u['id']; ?>">
+                                                    <button type="submit" class="text-zinc-600 hover:text-red-500 transition-colors"><i data-lucide="user-x" size=16></i></button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                     </div>
+                </section>
             </div>
 
             <!-- Profile & Access -->
@@ -278,9 +331,9 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fet
                      </form>
                  </section>
 
-                 <section id="users" class="space-y-8">
+                 <section id="invitations" class="space-y-8">
                      <div class="flex items-center justify-between">
-                         <h2 class="text-2xl font-black uppercase italic tracking-tighter">注册邀请邀请码</h2>
+                         <h2 class="text-2xl font-black uppercase italic tracking-tighter">邀请码</h2>
                          <form method="POST"><input type="hidden" name="action" value="gen_invite"><button type="submit" class="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20"><i data-lucide="plus" size=18></i></button></form>
                      </div>
                      <div class="space-y-3">
@@ -296,16 +349,21 @@ $messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC LIMIT 15")->fet
                      </div>
                  </section>
 
-                 <section id="messages" class="space-y-8">
+                 <section id="messages-section" class="space-y-8">
                      <h2 class="text-2xl font-black uppercase italic tracking-tighter">动态订阅</h2>
                      <div class="space-y-4">
                           <?php foreach($messages as $m): ?>
-                            <div class="glass p-6 rounded-2xl border-l-4 <?php echo $m['is_admin'] ? 'border-blue-500' : 'border-zinc-800'; ?> space-y-2">
+                            <div class="glass p-6 rounded-2xl border-l-4 <?php echo $m['is_admin'] ? 'border-blue-500' : 'border-zinc-800'; ?> space-y-2 group relative">
                                 <div class="flex items-center justify-between">
                                     <span class="font-black text-[10px] uppercase tracking-widest"><?php echo htmlspecialchars($m['username']); ?></span>
                                     <span class="text-[8px] font-bold text-zinc-600 uppercase"><?php echo date('M d, H:i', strtotime($m['created_at'])); ?></span>
                                 </div>
-                                <p class="text-xs text-zinc-400 leading-relaxed"><?php echo htmlspecialchars($m['content']); ?></p>
+                                <p class="text-xs text-zinc-400 leading-relaxed break-words pr-8"><?php echo htmlspecialchars($m['content']); ?></p>
+                                
+                                <form method="POST" onsubmit="return confirm('Delete message?');" class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <input type="hidden" name="action" value="delete_message"><input type="hidden" name="id" value="<?php echo $m['id']; ?>">
+                                    <button type="submit" class="p-2 rounded-lg hover:bg-red-500/10 text-zinc-500 hover:text-red-500"><i data-lucide="trash-2" size=14></i></button>
+                                </form>
                             </div>
                           <?php endforeach; ?>
                      </div>

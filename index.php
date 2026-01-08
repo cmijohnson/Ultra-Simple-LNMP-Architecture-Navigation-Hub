@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'includes/db.php';
 $pdo = getDB();
 $stmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'site_status' LIMIT 1");
@@ -102,10 +103,29 @@ if ($status === 'offline') {
             </nav>
 
             <div class="flex items-center gap-3 md:gap-4">
-                <div class="hidden md:flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
-                   <button id="header-lang-en" onclick="setLanguage('en')" class="px-3 py-1.5 rounded-lg text-[10px] font-black transition-all">EN</button>
-                   <button id="header-lang-zh" onclick="setLanguage('zh')" class="px-3 py-1.5 rounded-lg text-[10px] font-black transition-all">中</button>
-                </div>
+                
+                <?php if (isset($_SESSION['admin_user']) || isset($_SESSION['user'])): 
+                    $currUser = $_SESSION['admin_user'] ?? $_SESSION['user']; 
+                    $isAdmin = isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'admin';
+                ?>
+                    <div class="relative group">
+                        <button class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-blue-500/50 transition-all">
+                            <span class="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-[10px] font-black text-white"><?php echo strtoupper(substr($currUser, 0, 1)); ?></span>
+                            <span class="text-[10px] font-bold"><?php echo htmlspecialchars($currUser); ?></span>
+                            <i data-lucide="chevron-down" size="12" class="text-zinc-400"></i>
+                        </button>
+                        <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-black border border-zinc-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden hidden group-hover:block animate-fade-in-up origin-top-right">
+                             <?php if($isAdmin): ?>
+                                <a href="admin_dashboard.php" class="block px-4 py-3 text-xs font-bold hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors border-b border-zinc-100 dark:border-white/5">管理后台</a>
+                             <?php endif; ?>
+                             <a href="javascript:void(0)" onclick="openTool('message-board')" class="block px-4 py-3 text-xs font-bold hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors text-zinc-500">我的留言</a>
+                             <a href="logout.php" class="block px-4 py-3 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 transition-colors">退出登录</a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <a href="login.php" class="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Login</a>
+                <?php endif; ?>
+
                 <div class="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
                    <button onclick="setTheme('light')" class="p-2 rounded-lg text-zinc-400 hover:text-blue-500"><i data-lucide="sun" size="16"></i></button>
                    <button onclick="setTheme('dark')" class="p-2 rounded-lg text-zinc-400 hover:text-blue-400"><i data-lucide="moon" size="16"></i></button>
